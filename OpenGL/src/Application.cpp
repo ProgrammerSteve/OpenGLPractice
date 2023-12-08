@@ -42,6 +42,75 @@ int main()
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
+
+
+    //Define the vertex buffer outisde the while loop
+    //so that it isn't defined every frame
+
+    //we use glGenBuffers to define a vertex buffer
+    //the first parameter is how many buffers you would like
+    //the second parameter is a pointer to an unsigned int
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    //the variable buffer acts as the id to the generated buffer
+    //opengl acts as a state machine. Everything you generate in opengl gets
+    //assigned a unique identifier. This will be for the objects.
+
+    //If you want to bind/select a buffer, you need to pass in the integer id
+    //for the buffer.
+
+    //selecting in Opengl is called binding. We can use glBindBuffer()
+    // #define GL_ARRAY_BUFFER 0x8892, a Constant for the hexadecimal value
+    // The specific hexadecimal value 0x8892 for GL_ARRAY_BUFFER is just an arbitrarily 
+    // chosen unique identifier assigned by the OpenGL standards committee
+    //  The value 0x8892 was assigned to GL_ARRAY_BUFFER to uniquely identify 
+    // the target for operations related to array buffer objects.
+
+    //the first parameter specifies we are using an array
+    //the second parameter is the id we made called buffer
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
+
+    float positions[6] = {
+        -0.5f, -0.5f,
+        0.0f, 0.5f,
+        0.5f, -0.5f
+    };
+    //We will use the function: glBufferData() to set the data in the buffer
+    //First parameter is the hexadecimal value to say we are using an Array buffer
+    // 
+    // second parameter is size. size is in bytes for glBufferData as per documentation
+    //a good resource for openGL documentation is: docs.GL for gl4
+    // 
+    // Third parameter is a pointer to the data, since it's an array, we will
+    // just pass that
+    // 
+    // Fourth paramter is the usage enum
+    //static and dynamic are the ones we usually use, but there's also stream
+    //These are just hints to tell the GPU on how it will be implemented
+    glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), positions,GL_STATIC_DRAW);
+
+
+    //Normally we also add an index buffer, but we will go straight to drawing
+    //we also don't have a shader to tell how to draw our triangle
+
+    //To tell openGL what the data is, such as how to interpret the bytes it
+    //received. We need to tell how the data is laid out
+
+    //we can do this with a glVertexAttributePointer, which is closely tied with shaders
+
+
+    //to trigger a draw pull for our data, there are 2 main ways of doing it
+    //glDrawArrays(); for when we have no index buffer
+    //glDrawElements(); for when we have an index buffer
+
+
+    //OpenGL knows to set the data to the buffer we originally set since we did bind to it first
+    //we can use glBindBuffer(GL_ARRAY_BUFFER,0); to bind to null
+    //like photoshop, when we select a layer and draw, it will draw to that layer
+    //it's a state machine
+        
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -50,11 +119,16 @@ int main()
 
 
 
-        glBegin(GL_TRIANGLES);
-        glVertex2f(-0.5f, -0.5f);
-        glVertex2f(0.0f, 0.5f);
-        glVertex2f(0.5f, -0.5f);
-        glEnd();
+        //glBegin(GL_TRIANGLES);
+        //glVertex2f( -0.5f, -0.5f );
+        //glVertex2f( 0.0f, 0.5f   );
+        //glVertex2f( 0.5f, -0.5f  );
+        //glEnd();
+
+        //1st: the mode we want to set
+        //2nd: starting index in our array, which is i=0
+        //3rd: number of indices to render (# of verticies)
+        glDrawArrays(GL_TRIANGLES,0,3);
 
 
 
