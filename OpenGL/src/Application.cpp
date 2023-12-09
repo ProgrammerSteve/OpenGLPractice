@@ -70,7 +70,9 @@ int main()
     //the second parameter is the id we made called buffer
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
-
+    //While it is obvious to use that there are 2 floats per vertex, openGL doesn't know that
+    //But how does OpenGL know that the 6 points make 3 vertices of two points versus 2 vertices of 3 points
+    //we need to specify the layout with glVertexAttribPointer()
     float positions[6] = {
         -0.5f, -0.5f,
         0.0f, 0.5f,
@@ -91,11 +93,25 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), positions,GL_STATIC_DRAW);
 
 
+
+
+    //To make the VertexAttribPointer work, you need to use glEnableVertextAttribArray() first
+    //this enables a vertex attribute. With index of 0, we are enabling the first attribute
+    glEnableVertexAttribArray(0);
+    //index 0 since it's the first attribute, count 2 floats, type of data, false for normalize
+    //stride is the number of bytes between vertices [NOT ATTRIBUTES] 8bytes for sizeof(float) *2,
+    //pointer is for the offset for the attribute, 0. 
+    // If you another attribute for -0.5f, -0.5f, we would need to offset by 8bytes to reach it
+    // but there is only one attribute which takes a 0byte offset to select
+    glVertexAttribPointer(0,2,GL_FLOAT, GL_FALSE, sizeof(float)*2, 0 );
+    
+
+
     //Normally we also add an index buffer, but we will go straight to drawing
     //we also don't have a shader to tell how to draw our triangle
 
     //To tell openGL what the data is, such as how to interpret the bytes it
-    //received. We need to tell how the data is laid out
+    //received. We need to tell how the data is laid outs
 
     //we can do this with a glVertexAttributePointer, which is closely tied with shaders
 
