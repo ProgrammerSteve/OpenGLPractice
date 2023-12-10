@@ -77,18 +77,40 @@ generic vertex attribute are understood to be tightly packed in the array. The i
 each vertex. Let's suppose you have 3 floats for position, 2 floats for texture, and 3 floats for normal.
 Then thats 12 bytes for the position, 8 bytes for texture coordinates and 12 bytes for vertex normal.
 
--pointer, the sixth parameter, specifies the offset of the first comonent of the firt generic vertex attribute in the array in
+- pointer, the sixth parameter, specifies the offset of the first comonent of the firt generic vertex attribute in the array in
 the data store of the buffer currently bound to the GL_ARRAY_BUFFER target. Initial value is 0. The pointer is the
 pointer to the actual attribute and is inside the space of the vertex.
 
 ## glEnableVertextAttribArray
- To make the VertexAttribPointer work, you need to use glEnableVertextAttribArray() first
- this enables a vertex attribute, glEnableVertexAttribArray(0);
- The only parameter is an index which specifies the index of the generic vertex attribute to be enabled or disabled
- Since we only only after the position attribute, it would be i=0. Can be done before or after the 
- pointer code is written due to it being a state machine and it won't affect the code.
+To make the VertexAttribPointer work, you need to use glEnableVertextAttribArray() first
+this enables a vertex attribute, glEnableVertexAttribArray(0);
+The only parameter is an index which specifies the index of the generic vertex attribute to be enabled or disabled
+Since we only only after the position attribute, it would be i=0. Can be done before or after the 
+pointer code is written due to it being a state machine and it won't affect the code.
 
 
- # How do Shaders Work in OpenGL
- A program that runs on your gpu. We want to utilize the power of the GPU to output graphics. There are some
- things you want to do on the CPU and some things you want to do on the GPU.
+# How do Shaders Work in OpenGL
+A program that runs on your gpu. We want to utilize the power of the GPU to output graphics. There are some
+things you want to do on the CPU and some things you want to do on the GPU.
+
+There are vertex shaders and fragment shaders are the ones you will be using 90% of the time. There are other kinds such
+as tessellation shaders, geometry shaders, compute shaders. When you get into more advanced stuff, the other shaders come
+in handy to know.
+
+When you issue a draw call, the Vertex shader will get called and then the fragment shader. There are some smaller
+steps in between, but this is essentially what happens. The code that is our vertex shader gets called for every vertex
+we have. So if there's 3 vertices, the vertex shader gets called 3 times. The vertex shader will tell the GPU where you 
+want your vertex to be on your window. Doesn't have much to do with graphics, but it is used to passed data to the next
+phase, which is our fragment shader.
+
+The fragments shaders deals with pixels and will run once for each pixel that gets rasterized, or drawn on the screen.
+The fragment shader determine the right color for each pixel and get called thousands of times. Doing calculations in
+the fragment shader isn't ideal and would be more optimal to do the calculation in the vertex shader instead. Some things
+need to be calculated per pixel, such as lighting, due to the texture and material.
+
+Shaders work on the state machine. If you want to use a shader, you enable that shader.
+Just like you send data from the CPU to the GPU through a vertex buffer
+You can send data to your shader in the form of a uniform that comes from the CPU
+
+Some shaders can get to thousands lines of code, and some game engines create shaders on the fly depending on the
+settings the user selects.
