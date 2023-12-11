@@ -114,3 +114,57 @@ You can send data to your shader in the form of a uniform that comes from the CP
 
 Some shaders can get to thousands lines of code, and some game engines create shaders on the fly depending on the
 settings the user selects.
+
+
+## index buffers
+Assuming we are trying to draw a square. triangles are the lowest number of vertices needed to make a plane and are
+used by GPUs make larger shapes. In order to make a square, we can just use two triangles.
+
+```
+   float positions[12] = {
+    -0.5f, -0.5f,
+    0.5f, -0.5f,
+    0.5f, 0.5f,
+
+    0.5f, 0.5f,
+    -0.5f, 0.5f,
+    -0.5f, -0.5f,
+    };
+```
+We see that some of the same vertices can be seen in both triangles when drawing a square and we are storing the same bytes
+twice for two of the vertices. Index buffers let us reuse existing vertices to deal with the overlap.
+
+Some vertices can be very big, such as including info for position, textures, normals, colors, etc. So storing a few thousand
+vertices more than once can add up.
+
+
+```
+    float positions[] = {
+        -0.5f, -0.5f,//0
+        0.5f, -0.5f,//1
+        0.5f, 0.5f,//2
+        -0.5f, 0.5f//3
+    };
+
+    //using the indices of the position array,
+    //we can draw the triangles as such
+    unsigned int indices[] = {
+        0,1,2,  //drawing the first triangle
+        2,3,0   //drawing the second triangle
+    };
+
+    //use GL_ELEMENT_ARRAY_BUFFER instead of GL_ARRAY_BUFFER for indices
+    //index buffers have to be made up of unsigned ints
+    unsigned int ibo; //index buffer object
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+```
+
+
+To do our draw call:
+We do not use ```glDrawArrays(GL_TRIANGLES,0,6);``` anymore, instead we use ```glDrawElements()```
+```
+    //Drawing with index buffers
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+```

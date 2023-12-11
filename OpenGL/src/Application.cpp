@@ -190,11 +190,42 @@ int main()
     //While it is obvious to use that there are 2 floats per vertex, openGL doesn't know that
     //But how does OpenGL know that the 6 points make 3 vertices of two points versus 2 vertices of 3 points
     //we need to specify the layout with glVertexAttribPointer()
-    float positions[6] = {
-        -0.5f, -0.5f,
-        0.0f, 0.5f,
-        0.5f, -0.5f
+    float positions[] = {
+        -0.5f, -0.5f,//0
+        0.5f, -0.5f,//1
+        0.5f, 0.5f,//2
+        -0.5f, 0.5f//3
     };
+
+    //using the indices of the position array,
+    //we can draw the triangles as such
+    unsigned int indices[] = {
+        0,1,2,  //drawing the first triangle
+        2,3,0   //drawing the second triangle
+    };
+
+    //without using index buffers
+    float positionsOld[] = {
+        -0.5f, -0.5f,
+        0.5f, -0.5f,
+        0.5f, 0.5f,
+
+        0.5f, 0.5f,//duplicate
+        -0.5f, 0.5f,
+        -0.5f, -0.5f,//duplicate
+    };
+
+
+    //use GL_ELEMENT_ARRAY_BUFFER instead of GL_ARRAY_BUFFER for indices
+    //index buffers have to be made up of unsigned ints
+    unsigned int ibo; //index buffer object
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+
+
+
     //We will use the function: glBufferData() to set the data in the buffer
     //First parameter is the hexadecimal value to say we are using an Array buffer
     // 
@@ -207,7 +238,7 @@ int main()
     // Fourth paramter is the usage enum
     //static and dynamic are the ones we usually use, but there's also stream
     //These are just hints to tell the GPU on how it will be implemented
-    glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), positions,GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2*6*sizeof(float), positions,GL_STATIC_DRAW);
 
 
 
@@ -299,7 +330,11 @@ int main()
         //1st: the mode we want to set
         //2nd: starting index in our array, which is i=0
         //3rd: number of indices to render (# of verticies)
-        glDrawArrays(GL_TRIANGLES,0,3);
+        //glDrawArrays(GL_TRIANGLES,0,6);
+
+
+        //Drawing with index buffers
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 
 
