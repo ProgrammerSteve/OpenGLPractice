@@ -168,3 +168,126 @@ We do not use ```glDrawArrays(GL_TRIANGLES,0,6);``` anymore, instead we use ```g
     //Drawing with index buffers
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 ```
+
+## Dealing with Errors in OpenGL
+Two main ways to get errors
+
+glGetError(), is compatible with all versions and sets error flags. Will give you one error at a time
+
+glDebugMessageCallback(), came out in OpenGL 4.3. Much better than getGetError() but can't be used
+in earlier versions. Will give you more detailed information on the error itself.
+
+
+glGetError() is called inside a loop to get all the errors
+```
+static void GLClearError()
+{
+    //runs through all the errors to clear it
+    while (glGetError() != GL_NO_ERROR);
+}
+
+static void GLCheckError()
+{
+    //as long as the error is not false
+    while (GLenum error =glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << ")" << std::endl;
+    }
+}
+```
+We call GLClearError first, then GLCheckError to look for an error for a certain
+section of the code. We get an error code back.
+We need to convert the error code into hexadecimal to look it up
+
+Example:
+error code: 1280 is 0x0500, which is GL_INVALID_ENUM
+```
+    GLClearError();
+    glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr);
+    GLCheckError();
+```
+You could write code to convert the error message code into the
+exact error message if you wanted to. The only thing we don't know
+is what line of code the error happened.
+
+If the error is being printed in every frame, the error
+is in the render while loop.
+
+We can make our debugger to pause the code execution when an error occurs
+using an INSERT. It's similar to a breakpoint, but doing it with code
+
+We make a macro at the top
+```
+//MSVC specific
+#define ASSERT(x) if (!(x)) __debugbreak(); 
+```
+This only works with MSVC compilers
+Then we change our GLCheckError function into this:
+```
+static bool GLLogCall()
+{
+    //as long as the error is not false
+    while (GLenum error =glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << ")" << std::endl;
+        return false;
+    }
+    return true;
+}
+```
+It returns false if there's an error, and true if there's no error
+Run the code with the debugger to see the breakpoint being
+inserted with the macro
+
+Now here's the updated code:
+```
+    GLClearError();
+    glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr);
+    ASSERT(GLLogCall());
+```
+
+We can do better and make another macro to do the clearing and checking all in
+a single call.
+```
+#define GLCall(x) GLClearError();\
+    x;\
+    ASSERT(GLLogCall())
+```
+The code we want goes in the middle as "x" in between GLCall() and GLLogCall()
+Now our code looks like this:
+```
+GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+```
+
+
+We can do more with macros to include more information, first let's add more parameters
+into GLLogCall:
+```
+static bool GLLogCall(const char* function, const char* file, int line)
+{
+    //as long as the error is not false
+    while (GLenum error =glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << "): " 
+            <<function<<" "<<file<<":"<<line << std::endl;
+        return false;
+    }
+    return true;
+}
+```
+Then for the macro we have
+```
+#define GLCall(x) GLClearError();\
+    x;\
+    ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+```
+- Putting a hash in front of x turns it into a string in our macro
+- __FILE__ gives the file location, not specific to a compiler
+- __LINE__ give the line for the code, not specific to a compiler
+
+Now for every GL call we make, we should wrap it with our macro for debugging
+Putting a scope in the macro definition might mess up stack memory variables
+that are assigned to the output of a gl function
+example:
+```
+GLCall(unsigned int program = glCreateProgram();)
+```
+If we used a scope {} instead of \ to create a new line, the program variable
+will become undone due to the scope.

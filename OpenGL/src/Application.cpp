@@ -4,6 +4,12 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+//__debugbreak() is MSVC compiler specific
+#define ASSERT(x) if (!(x)) __debugbreak(); 
+#define GLCall(x) GLClearError();\
+    x;\
+    ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
 
 //https://www.glfw.org/
 //https://glew.sourceforge.net/
@@ -17,6 +23,27 @@
 //the c file looks at drivers and gives you the proper code to work with them
 
 //an alternative to Glew is Glad
+
+
+static void GLClearError()
+{
+    //runs through all the errors to clear it
+    while (glGetError() != GL_NO_ERROR);
+}
+
+static bool GLLogCall(const char* function, const char* file, int line)
+{
+    //as long as the error is not false
+    while (GLenum error =glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << "): " 
+            <<function<<" "<<file<<":"<<line << std::endl;
+        return false;
+    }
+    return true;
+}
+
+
+
 
 
 //Code to create a shader
@@ -65,18 +92,18 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
     unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
 
     //Now we attach the shaders to the program and link it
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
+    GLCall(glAttachShader(program, vs));
+    GLCall(glAttachShader(program, fs));
+    GLCall(glLinkProgram(program));
+    GLCall(glValidateProgram(program));
 
     //After the shaders have been linked, we can delete the "intermediates"
     //technically we should be called glDetachShader, to get rid of the source code
     //but it can be useful for debuggin with the downside of taking up a trival amount
     //of memory. A lot of game engines don't bother detaching.
     //that topic will discussed later on
-    glDeleteShader(vs);
-    glDeleteShader(fs);
+    GLCall(glDeleteShader(vs));
+    GLCall(glDeleteShader(fs));
 
     return program;
 }
@@ -166,8 +193,8 @@ int main()
     //the second parameter is a pointer to an unsigned int
     unsigned int buffer;
     unsigned int vao;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &buffer);
+    GLCall(glGenVertexArrays(1, &vao));
+    GLCall(glGenBuffers(1, &buffer));
     //the variable buffer acts as the id to the generated buffer
     //opengl acts as a state machine. Everything you generate in opengl gets
     //assigned a unique identifier. This will be for the objects.
@@ -184,8 +211,8 @@ int main()
 
     //the first parameter specifies we are using an array
     //the second parameter is the id we made called buffer
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    GLCall(glBindVertexArray(vao));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
 
     //While it is obvious to use that there are 2 floats per vertex, openGL doesn't know that
     //But how does OpenGL know that the 6 points make 3 vertices of two points versus 2 vertices of 3 points
@@ -219,9 +246,9 @@ int main()
     //use GL_ELEMENT_ARRAY_BUFFER instead of GL_ARRAY_BUFFER for indices
     //index buffers have to be made up of unsigned ints
     unsigned int ibo; //index buffer object
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+    GLCall(glGenBuffers(1, &ibo));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
 
 
 
@@ -238,20 +265,20 @@ int main()
     // Fourth paramter is the usage enum
     //static and dynamic are the ones we usually use, but there's also stream
     //These are just hints to tell the GPU on how it will be implemented
-    glBufferData(GL_ARRAY_BUFFER, 2*6*sizeof(float), positions,GL_STATIC_DRAW);
+    GLCall(glBufferData(GL_ARRAY_BUFFER, 2*6*sizeof(float), positions,GL_STATIC_DRAW));
 
 
 
 
     //To make the VertexAttribPointer work, you need to use glEnableVertextAttribArray() first
     //this enables a vertex attribute. With index of 0, we are enabling the first attribute
-    glEnableVertexAttribArray(0);
+    GLCall(glEnableVertexAttribArray(0));
     //index 0 since it's the first attribute, count 2 floats, type of data, false for normalize
     //stride is the number of bytes between vertices [NOT ATTRIBUTES] 8bytes for sizeof(float) *2,
     //pointer is for the offset for the attribute, 0. 
     // If you another attribute for -0.5f, -0.5f, we would need to offset by 8bytes to reach it
     // but there is only one attribute which takes a 0byte offset to select
-    glVertexAttribPointer(0,2,GL_FLOAT, GL_FALSE, sizeof(float)*2, 0 );
+    GLCall(glVertexAttribPointer(0,2,GL_FLOAT, GL_FALSE, sizeof(float)*2, 0 ));
 
 
 
@@ -309,7 +336,7 @@ int main()
 
 
     unsigned int shader = CreateShader(source.VertexSource,source.FragmentSource);
-    glUseProgram(shader);
+    GLCall(glUseProgram(shader));
 
 
        
@@ -332,11 +359,13 @@ int main()
         //3rd: number of indices to render (# of verticies)
         //glDrawArrays(GL_TRIANGLES,0,6);
 
-
+        //GLClearError();
         //Drawing with index buffers
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        //glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr);
+        //ASSERT(GLLogCall());
 
-
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+   
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
