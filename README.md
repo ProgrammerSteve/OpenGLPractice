@@ -291,3 +291,123 @@ GLCall(unsigned int program = glCreateProgram();)
 ```
 If we used a scope {} instead of \ to create a new line, the program variable
 will become undone due to the scope.
+
+## Uniforms
+Are a way to send data from the CPU to the shader. In our case, C++ to our shaders to use as a variable.
+Let's say we wanted to change the color of our square (2 triangles). We can do two things.
+- Use a uniform
+- send the data as an attribute with the vertex
+
+
+Uniforms are set per draw, while attributes are set per vertex. We set the Uniform before the draw call.
+One naming convention we can use for uniform variables are writing "u_" in front to signify a uniform
+Here is an example of passing a uniform to our Fragment Shader
+
+Our fragment shader before the uniform
+```
+#shader fragment
+#version 330 core
+        
+layout(location = 0) out vec4 color;
+        
+void main()
+{
+    color = vec4(1.0, 0.0, 0.0, 1.0);
+};
+```
+
+Our fragment shader after the uniform
+```
+#shader fragment
+#version 330 core
+        
+layout(location = 0) out vec4 color;
+
+uniform vec4 u_Color;
+        
+void main()
+{
+    color = u_Color;
+};
+```
+
+Now we set the variable from c++
+
+- since we are using vec4, we need 4 floats, thus we use glUniform4f
+once a shader gets created, every shader gets an id so that we can reference it
+the way we can look up the id, typically, is by its name.
+
+- glUniform4F's first parameter is the id for the uniform in the shader, which we
+can get with glGetUniformLocation passing shader and the name of the uniform as arguments
+
+- We use ASSERT to make use location actually does exist, or create a breakpoint while debugging
+
+```
+unsigned int shader = CreateShader(source.VertexSource,source.FragmentSource);
+GLCall(glUseProgram(shader));
+
+
+GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+ASSERT(location != -1);
+GLCall(glUniform4f(location,0.2f,0.3f,0.8f,1.0f));
+```
+
+To make our uniform value change, we can set a base value and increment value
+outside the render loop as such
+```
+    float r = 0.0f;
+    float increment = 0.05f;
+    while (!glfwWindowShouldClose(window))
+    {
+    ...
+    }
+```
+
+Now, within the loop, we set the uniform value again per frame using the variable r.
+Once r is greater than 1.0f, the increment decreases, once it reaches zero, it increases.
+we use r+=increment to change the value per frame.
+```
+    GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+    if (r > 1.0f)
+        increment = -0.05f;
+    else if (r < 0.0f)
+        increment = 0.05f;
+
+    r += increment;
+```
+
+To limit our framerate to be less flashy, after the window context is created,
+we use the function glfwSwapInterval() function and pass in a 1. This syncs the framerate
+with our monitors refresh rate. The animation appears much smoother.
+
+```
+int main()
+{
+    GLFWwindow* window;
+    /* Initialize the library */
+    if (!glfwInit())
+        return -1;
+
+    /* Create a windowed mode window and its OpenGL context */
+    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
+    /* Make the window's context current */
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+
+    .
+    .
+    .
+
+    return 0;
+}
+```
+
+One thing to keep in mind is that Uniforms are done on a per draw basis.
