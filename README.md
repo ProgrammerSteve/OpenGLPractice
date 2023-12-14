@@ -1,5 +1,18 @@
 # OpenGL Notes
 
+https://www.glfw.org/
+https://glew.sourceforge.net/
+
+- Windows uses directX/direct3D for OpenGL graphics
+turn modern OpenGL functions into window's OpenGL
+access driver dll files and retrive functions
+
+- We will use another library called Glew (openGL extension wrangler)
+provide openGL specifications in a header file
+the c file looks at drivers and gives you the proper code to work with them
+
+- An alternative to Glew is Glad
+
 # Vertex Buffer
 - Vertex buffer can be thought of as a buffer of memory in openGL, or a blob of memory
 - to store bytes. The difference is that it's in our GPU, in our VRam (video ram)
@@ -411,3 +424,11 @@ int main()
 ```
 
 One thing to keep in mind is that Uniforms are done on a per draw basis.
+
+
+
+## Vertex Arrays
+What is the difference between a vertex buffer and a vertex array?
+Vertex Array doesn't exist in some other rendering apis.
+They are a way to bind vertex buffers with a certain kind of specification/layout
+

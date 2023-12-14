@@ -10,21 +10,6 @@
     x;\
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 
-
-//https://www.glfw.org/
-//https://glew.sourceforge.net/
-
-//Windows uses directX/direct3D for OpenGL graphics
-//turn modern OpenGL functions into window's OpenGL
-//access driver dll files and retrive functions
-
-//we will use another library called Glew (openGL extension wrangler)
-//provide openGL specifications in a header file
-//the c file looks at drivers and gives you the proper code to work with them
-
-//an alternative to Glew is Glad
-
-
 static void GLClearError()
 {
     //runs through all the errors to clear it
@@ -41,9 +26,6 @@ static bool GLLogCall(const char* function, const char* file, int line)
     }
     return true;
 }
-
-
-
 
 
 //Code to create a shader
@@ -266,7 +248,7 @@ int main()
     // Fourth paramter is the usage enum
     //static and dynamic are the ones we usually use, but there's also stream
     //These are just hints to tell the GPU on how it will be implemented
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 2*6*sizeof(float), positions,GL_STATIC_DRAW));
+    GLCall(glBufferData(GL_ARRAY_BUFFER, 4*2*sizeof(float), positions,GL_STATIC_DRAW));
 
 
 
